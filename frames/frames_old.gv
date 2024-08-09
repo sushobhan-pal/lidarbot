@@ -1,0 +1,15 @@
+digraph G {
+"scanmatch_odom" -> "base_link"[label=" Broadcaster: /odomtransformer\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"base_link" -> "chassis"[label=" Broadcaster: /robot_state_publisher\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"base_link" -> "laser_frame"[label=" Broadcaster: /robot_state_publisher\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"map" -> "scanmatch_odom"[label=" Broadcaster: /amcl\nAverage rate: 8.079\nBuffer length: 4.827\nMost recent transform: 1721486887.864\nOldest transform: 1721486883.037\n"];
+"base_link" -> "left_back_wheel"[label=" Broadcaster: /robot_state_publisher\nAverage rate: 10.209\nBuffer length: 4.8\nMost recent transform: 1721486887.914\nOldest transform: 1721486883.114\n"];
+"base_link" -> "left_front_wheel"[label=" Broadcaster: /robot_state_publisher\nAverage rate: 10.209\nBuffer length: 4.8\nMost recent transform: 1721486887.914\nOldest transform: 1721486883.114\n"];
+"base_link" -> "right_back_wheel"[label=" Broadcaster: /robot_state_publisher\nAverage rate: 10.209\nBuffer length: 4.8\nMost recent transform: 1721486887.914\nOldest transform: 1721486883.114\n"];
+"base_link" -> "right_front_wheel"[label=" Broadcaster: /robot_state_publisher\nAverage rate: 10.209\nBuffer length: 4.8\nMost recent transform: 1721486887.914\nOldest transform: 1721486883.114\n"];
+"map" -> "scanmatcher_frame"[label=" Broadcaster: /hector_mapping\nAverage rate: 8.079\nBuffer length: 4.827\nMost recent transform: 1721486887.764\nOldest transform: 1721486882.937\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1721486888.03747"[ shape=plaintext ] ;
+}->"map";
+}
