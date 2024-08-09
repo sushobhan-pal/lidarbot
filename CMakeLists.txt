@@ -219,16 +219,6 @@ install(PROGRAMS
 	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(PROGRAMS
-	nodes/odom_imu_time_synchronizer.py
-	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(PROGRAMS
-	nodes/odom_covariance.py
-	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
 install(FILES
 	odomtransformer.launch
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

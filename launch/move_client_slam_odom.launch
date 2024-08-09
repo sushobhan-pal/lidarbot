@@ -19,9 +19,17 @@
 		<param name="port" value="/dev/ttyACM0" />
 	</node>
 
+	<!-- Run the map server --> 
+	<!-- <arg name="map_file" default="$(find lidarbot)/maps/other_room.yaml"/> -->
+	<arg name="map_file" default="$(find lidarbot)/maps/other_room.yaml"/>
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+    
+
+	<!-- HECTOR STUFF. -->
+
 	<arg name="tf_map_scanmatch_transform_frame_name" default="scanmatcher_frame"/>
 	<arg name="base_frame" default="base_footprint"/>
-	<arg name="odom_frame" default="odom"/>
+	<arg name="odom_frame" default="base_footprint"/>
 	<!-- Change below!! Used to be true. -->
 	<arg name="pub_map_odom_transform" default="false"/>
 	<arg name="scan_subscriber_queue_size" default="10"/>
@@ -42,7 +50,7 @@
         <param name="use_tf_scan_transformation" value="true"/>
         <param name="use_tf_pose_start_estimate" value="false"/>
         <param name="pub_map_odom_transform" value="$(arg pub_map_odom_transform)"/>
-        
+    
         <!-- Map size / start point -->
         <param name="map_resolution" value="0.050"/>
         <param name="map_size" value="$(arg map_size)"/>
@@ -78,36 +86,59 @@
 		<param name="tf_output" value="base_footprint" />
 	</node>
 
-	<!-- IMU Nodes -->
-	<node name="mpu_node" pkg="mpu6050_driver" type="mpu6050_node" output="screen">
-    	<rosparam file="$(find mpu6050_driver)/config/mpu_settings.yaml" command="load"/>
-    	<param name="frame_id" type="string" value="imu"/>
-	</node>
+    <!-- Publish: /initialpose, /move_base_simple/goal -->
+    <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find lidarbot)/rviz/navigation.rviz"> </node> -->
+    
+	<!-- AMCL stuff. -->
+	<node pkg="amcl" type="amcl" name="amcl">
+		<remap from="scan" to="scan" />
+		<param name="tf_broadcast" value="true" />
+		<param name="base_frame_id" value="base_footprint" />
+		<param name="global_frame_id" value="map" />
+		<param name="odom_frame_id" value="scanmatch_odom" />
+		<param name="use_map_topic" value="false" />
+	    <param name="odom_model_type" value="diff" />
+	    <param name="gui_publish_rate" value="10.0"/>
+	    <param name="laser_max_beams" value="30"/>
+	    <param name="laser_max_range" value="12"/>
+	    <param name="min_particles" value="500"/>
+	    <param name="max_particles" value="2000"/>
+	    <param name="kld_err" value="0.05"/>
+	    <param name="kld_z" value="0.99"/>
+	    <param name="odom_alpha1" value="0.2"/>
+	    <param name="odom_alpha2" value="0.2"/>
+	    <param name="odom_alpha3" value="0.2"/>
+	    <param name="odom_alpha4" value="0.2"/>
+	    <!-- <param name="odom_alpha5" value="0.1"/> # (only used if model is "omni") -->
+	    <param name="laser_z_hit" value="0.5"/>
+	    <param name="laser_z_short" value="0.05"/>
+	    <param name="laser_z_max" value="0.05"/>
+	    <param name="laser_z_rand" value="0.5"/>
+	    <param name="laser_sigma_hit" value="0.2"/>
+	    <param name="laser_lambda_short" value="0.1"/>
+	    <param name="laser_model_type" value="likelihood_field"/>
+	    <param name="laser_likelihood_max_dist" value="2.0"/>
+	    <param name="resample_interval" value="1"/>
+	    <param name="update_min_a" value="0.2"/>
+	    <param name="update_min_d" value="0.2"/>
+	    <param name="transform_tolerance" value="0.5"/>
+	    <param name="recovery_alpha_slow" value="0.001"/>
+	    <param name="recovery_alpha_fast" value="0.1"/>
+	  </node>
 
-	<node name="imu_filter_node" pkg="imu_filter_madgwick" type="imu_filter_node" output="screen">
-    	<rosparam file="$(find mpu6050_driver)/config/madgwick_filter_params.yaml" command="load"/>
-    	<param name="fixed_frame" type="string" value="base_footprint"/>
-    	<remap from="imu/data" to="imu/data_filtered"/>
-	</node>
-	
+	  <!-- MOVEMENT -->
+	  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+	  	  <rosparam file="$(find lidarbot)/costmap_common_params.yaml" command="load" ns="global_costmap" /> 
+	  	  <rosparam file="$(find lidarbot)/costmap_common_params.yaml" command="load" ns="local_costmap" />
+	  	  <rosparam file="$(find lidarbot)/local_costmap_params.yaml" command="load" />
+	  	  <rosparam file="$(find lidarbot)/global_costmap_params.yaml" command="load" /> 
+	  	  <rosparam file="$(find lidarbot)/base_local_planner_params.yaml" command="load" />
+	  	  <param name="local_costmap/global_frame" value="scanmatch_odom"/>
+	  </node>
 
-	<node name="odom_covariance_corrector" pkg="lidarbot" type="odom_covariance.py" output="screen"/>
-	<node name="sync_node" pkg="lidarbot" type="odom_imu_time_synchronizer.py" output="screen"/>
 
-	<!-- Robot Pose EKF -->
-	<node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" output="screen">
-    	<remap from="odom" to="scanmatch_odom" />
-	    <remap from="imu_data" to="imu/data_filtered" />
-		<param name="output_frame" value="odom"/>
-		<param name="base_footprint_frame" value="base_footprint"/>
-    	<param name="freq" value="30.0"/>
-    	<param name="sensor_timeout" value="2.0"/>
-    	<param name="odom_used" value="true"/>
-    	<param name="imu_used" value="true"/>
-    	<param name="vo_used" value="false"/>
-    	<param name="gps_used" value="false"/>
-    	<param name="debug" value="false"/>
-    	<param name="self_diagnose" value="false"/>
-	</node>
+	<!-- Run odom transformer. Credit goes to https://github.com/ne0h/hmmwv/blob/master/ros_workspace/src/hmmwv/launch/odomtransformer.launch -->
+    <!-- <include file="$(find lidarbot)/launch/odomtransformer.launch"/>
+    -->
 </launch>
 

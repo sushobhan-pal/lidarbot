@@ -10,7 +10,7 @@
 	<!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_mapcurrent" args="0 0 0 0 0 0 map mapcurrent_frame" /> -->
 	<!-- odom to base_footprint transform will be provided by the robot_pose_ekf node -->
 	<!-- map to odom will be provided by the AMCL -->
-	<!-- node pkg="tf" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 map odom 30" /> -->
+	<!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 map odom" /> -->
 
 
 	<!-- Run lidar. -->
@@ -37,6 +37,8 @@
 	<node name="mpu_node" pkg="mpu6050_driver" type="mpu6050_node" output="screen">
     	<rosparam file="$(find mpu6050_driver)/config/mpu_settings.yaml" command="load"/>
     	<param name="frame_id" type="string" value="imu"/>
+    	<param name="pub_rate" type="int" value="30"/>
+    	<rosparam param="axes_offsets" >[-2431, -807, 1023, -1114, 9, 14]</rosparam>
   	</node>
 
   	<node name="imu_filter_node" pkg="imu_filter_madgwick" type="imu_filter_node" output="screen">
@@ -70,13 +72,14 @@
     <node pkg="lidarbot" type="rviz_click_to_2d" name="rviz_click_to_2d"/>   
 
 	<!-- Run the map server --> 
+	<!-- <arg name="map_file" default="$(find lidarbot)/maps/other_room.yaml"/> -->
 	<arg name="map_file" default="$(find lidarbot)/maps/other_room.yaml"/>
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
     
 
 	<!-- HECTOR STUFF. -->
 
-	<arg name="tf_map_scanmatch_transform_frame_name" default="base_footprint"/>
+	<arg name="tf_map_scanmatch_transform_frame_name" default="scanmatcher_frame"/>
 	<arg name="base_frame" default="base_footprint"/>
 	<arg name="odom_frame" default="odom"/>
 	<!-- Change below!! Used to be true. -->
@@ -90,7 +93,7 @@
     	<param name="pub_odometry" value="$(arg pub_odometry)"/>
 
         <!-- Frame names -->
-	<remap from="map" to="mapcurrent" />
+	    <remap from="map" to="mapcurrent" />
         <param name="map_frame" value="map" />
         <param name="base_frame" value="$(arg base_frame)" />
         <param name="odom_frame" value="$(arg odom_frame)" />
@@ -137,7 +140,7 @@
 		<param name="base_frame_id" value="base_footprint" />
 		<param name="global_frame_id" value="map" />
 		<param name="odom_frame_id" value="odom" />
-		<param name="use_map_topic" value="true" />
+		<param name="use_map_topic" value="false" />
 	    <param name="odom_model_type" value="diff" />
 	    <param name="gui_publish_rate" value="10.0"/>
 	    <param name="laser_max_beams" value="30"/>
